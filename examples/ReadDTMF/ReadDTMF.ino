@@ -1,3 +1,7 @@
+#include "Arduino.h"
+#include <LiquidCrystal_I2C.h>;
+LiquidCrystal_I2C lcd(0x27,16,2);
+
 #define Q1 6
 #define Q2 5
 #define Q3 4
@@ -48,10 +52,10 @@ void readDTMF()
   byte3 = digitalRead(Q3);
   byte4 = digitalRead(Q4);
   //Serial.println("Read new data");
-//  Serial.print(byte4 + String(" - "));
-//  Serial.print(byte3 + String(" - "));
-//  Serial.print(byte2 + String(" - "));
-//  Serial.println(byte1);
+  //  Serial.print(byte4 + String(" - "));
+  //  Serial.print(byte3 + String(" - "));
+  //  Serial.print(byte2 + String(" - "));
+  //  Serial.println(byte1);
   val = giaima(byte1, byte2, byte3, byte4);
   flagRead = true;
 }
@@ -73,6 +77,9 @@ void setup() {
   digitalWrite(TB3, LOW);
   digitalWrite(TB4, LOW);
 
+  lcd.begin();       //Khởi động màn hình. Bắt đầu cho phép Arduino sử dụng màn hình
+  lcd.backlight();   //Bật đèn nền
+
   Serial.begin(9600);
   Serial.println("Read DTMF");
 
@@ -81,7 +88,6 @@ void setup() {
 
 void loop() {
   if(digitalRead(start) == LOW){ // Cảm biến ánh sáng phát hiện có cuộc gọi
-    digitalWrite(playTone, HIGH); // Kích hoạt phát âm thanh mời nhập mật khẩu
     switch(Mode){
       case 0:{ // Thông báo
         digitalWrite(playTone, HIGH); // Kích hoạt phát âm thanh mời nhập mật khẩu
@@ -119,10 +125,6 @@ void loop() {
       break;
     }
   }
-//  if(flagRead == true){
-//    unlock();
-//    flagRead = false;
-//  }
 }
 
 int giaima(bool n1, bool n2, bool n3, bool n4){
@@ -144,24 +146,23 @@ void unlock(){
       count = 0;
       lanSai++; 
       look = 0; // mật khẩu sai, cho phép tiếp tục nhập mật khẩu
-      if(lanSai >= 3){
+      if(lanSai >= 3){ // Nếu mật khẩu sai quá 3 lần thì trả kết quả về bằng 3 và vô hiệu hóa chương trình
         Serial.println("Sai mat khau 3 lan. Khoa may!");
         lanSai = 0;
-        look = 3; // Nếu mật khẩu sai quá 3 lần thì trả kết quả về bằng 3 và vô hiệu hóa chương trình
-                    // Chờ đến khi màn hình điện thoại tắt thì chương trình mới hoạt động trở lại
+        look = 3; 
+        // Chờ đến khi màn hình điện thoại tắt thì chương trình mới hoạt động trở lại            
       }
     }
   }
-  else if(count == 5){ count = 0;}
+  else if(count == 4){ count = 0;}
   else{
     keyboard[count] = val;
     Serial.print(keyboard[count]);
     count++;
   }
-  return look;
 }
 void clearKeyboard(){
-  for(int i=0; i<5; i++){ // clear keyboard
+  for(int i=0; i<4; i++){ // clear keyboard
     keyboard[i] = 0;
   }
 }
