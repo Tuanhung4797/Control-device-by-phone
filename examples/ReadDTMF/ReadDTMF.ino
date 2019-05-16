@@ -2,39 +2,39 @@
 #include <LiquidCrystal_I2C.h>;
 LiquidCrystal_I2C lcd(0x27,16,2);
 
-#define Q1 6
+#define Q1 6  //Khai báo chân của module MT8870
 #define Q2 5
 #define Q3 4
 #define Q4 3
-#define StQ 2
-#define start 7
-#define playTone 8
+#define StQ 2 // Chân StQ báo trạng thái có tín hiệu mới từ module MT8870
+#define start 7 // Khai báo chân cảm biến ánh sáng phát hiện có cuộc gọi tới
+#define playTone 8 // Khai báo chân PlayE của module ISD1820
 
-#define LM35 A0
+#define LM35 A0 // Khai báo chân cảm biến nhiệt độ
 
-#define TB1 9
+#define TB1 9  // Khai báo chân Rơ le
 #define TB2 10
 #define TB3 11
 #define TB4 12
 
-#define Sao 11
-#define Thang 12
+#define Sao 11   // Định nghĩa cho nút *
+#define Thang 12 // Định nghĩa cho nút #
 
-bool byte1 = 0;
+bool byte1 = 0; // biến lưu trạng thái của module MT8870
 bool byte2 = 0;
 bool byte3 = 0;
 bool byte4 = 0;
 
-bool state1 = false;
+bool state1 = false; // Lưu trạng thái của thiết bị
 bool state2 = false;
 bool state3 = false;
 bool state4 = false;
 
 int Mode = 0;
 int look;
-
-int password[4] = {1,2,3,4};
-int keyboard[4];
+ 
+int password[4] = {1,2,3,4};  // Password 
+int keyboard[4]; // Mảng lưu giá trị mật khẩu được nhập vào từ bàn phím
 
 int control;
 
@@ -45,7 +45,7 @@ int lanSai = 0;
 bool flagRead = false;
 int val;
 
-void readDTMF()
+void readDTMF() // Hàm ngắt đọc giá trị gửi về từ module MT8870
 {
   byte1 = digitalRead(Q1);
   byte2 = digitalRead(Q2);
@@ -83,7 +83,10 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Read DTMF");
 
-  attachInterrupt(0, readDTMF, RISING);
+  lcd.setCursor(0,0);
+  lcd.print("");
+
+  attachInterrupt(0, readDTMF, RISING); // Khai báo ngắt cho chương trình đọc dữ liệu của module MT8870 (chân StQ nối với chân D2)
 }
 
 void loop() {
@@ -127,12 +130,12 @@ void loop() {
   }
 }
 
-int giaima(bool n1, bool n2, bool n3, bool n4){
+int giaima(bool n1, bool n2, bool n3, bool n4){ // Hàm chuyển đổi BIN sang DEC
   int number = (n1 + (n2 * 2) + (n3 * 4) + (n4 * 8));
   return number;
 }
 
-void unlock(){
+void unlock(){ // Hàm mở khóa
   if(val == Thang){ // nếu nút # được nhấn thì kiểm tra mật khẩu đúng hay không
     if(keyboard[0] == password[0] && keyboard[1] == password[1] && keyboard[2] == password[2] && keyboard[3] == password[3]){ // Nếu mk đúng
       Serial.println("Mat khau chinh xac");
@@ -167,7 +170,7 @@ void clearKeyboard(){
   }
 }
 
-void dieukhien(){
+void dieukhien(){ // Hàm điều khiển thiết bị
   if(val == Sao){
     if(control == 1){
       Serial.println("Bat/Tat thiet bi so 1");
@@ -251,4 +254,15 @@ void offAll(){
   digitalWrite(TB2, LOW);
   digitalWrite(TB3, LOW);
   digitalWrite(TB4, LOW);
+}
+void readTemp(){
+  int reading = analogRead(LM35); // Đọc giá trị từ cảm biến LM35
+  float voltage = reading * 5.0 / 1024.0; // Tính ra hiệu điện thế 
+  float temp = voltage * 100.0; // Tính ra nhiệt độ
+
+  //Serial.println(String("Nhiet do: ") + temp);
+  lcd.setCursor(0,0);
+  lcd.print("Nhiet do:");
+  lcd.setCursor(10,0);
+  lcd.print(temp);
 }
